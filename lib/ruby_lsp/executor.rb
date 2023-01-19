@@ -98,6 +98,12 @@ module RubyLsp
 
           nil
         end
+      when "textDocument/rename"
+        warn("textDocument/rename is not implemented yet")
+        warn(request.inspect)
+        # check what behaviour is if we slect a range before choosing rename
+        # todo: check if syntax_tree has examples of renaming a node
+        rename(uri, request.dig(:params, :position), request.dig(:params, :newName))
       end
     end
 
@@ -147,6 +153,12 @@ module RubyLsp
     sig { params(uri: String).returns(Object) }
     def text_document_did_close(uri)
       @store.delete(uri)
+      VOID
+    end
+
+    def rename(uri, position, new_name)
+      warn("hit rename")
+      Requests::Rename.new(@store.get(uri), position, new_name).run
       VOID
     end
 
@@ -332,6 +344,7 @@ module RubyLsp
           document_on_type_formatting_provider: on_type_formatting_provider,
           diagnostic_provider: diagnostics_provider,
           inlay_hint_provider: inlay_hint_provider,
+          rename_provider: {},
         ),
       )
     end

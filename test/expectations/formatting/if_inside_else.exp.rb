@@ -1,7 +1,7 @@
 # typed: false
 # frozen_string_literal: true
 
-def my_method
+def my_method33
   if a
     do_thing_0
   elsif b
