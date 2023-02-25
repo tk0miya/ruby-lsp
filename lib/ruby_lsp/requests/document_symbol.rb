@@ -62,6 +62,8 @@ module RubyLsp
       )
 
       ATTR_ACCESSORS = T.let(["attr_reader", "attr_writer", "attr_accessor"].freeze, T::Array[String])
+      DSL_TEST_METHODS = T.let(["test", "it", "specify", "setup", "teardown"].freeze, T::Array[String])
+      DSL_BLOCK_METHODS = T.let(["describe", "context", "before", "after"].freeze, T::Array[String])
 
       class SymbolHierarchyRoot
         extend T::Sig
@@ -108,8 +110,28 @@ module RubyLsp
 
       sig { override.params(node: SyntaxTree::Command).void }
       def visit_command(node)
-        return unless ATTR_ACCESSORS.include?(node.message.value)
+        handle_attr_accessors(node) if ATTR_ACCESSORS.include?(node.message.value)
+        handle_dsl_test_methods(node) if DSL_TEST_METHODS.include?(node.message.value)
+      end
 
+      sig { params(node: SyntaxTree::Command).void }
+      def handle_dsl_block_methods(node)
+        # require "debug"
+        # debugger
+        symbol = create_document_symbol(
+          name: node.arguments.parts.first.parts.first.value, # "blah", # full_constant_name(node.constant),
+          kind: :module,
+          range_node: node,
+          selection_range_node: node,
+        )
+
+        @stack << symbol
+        visit(node.block.bodystmt)
+        @stack.pop
+      end
+
+      sig { params(node: SyntaxTree::Command).void }
+      def handle_attr_accessors(node)
         node.arguments.parts.each do |argument|
           next unless argument.is_a?(SyntaxTree::SymbolLiteral)
 
@@ -117,9 +139,37 @@ module RubyLsp
             name: argument.value.value,
             kind: :field,
             range_node: argument,
-            selection_range_node: argument.value,
+            selection_range_node: argument,
           )
         end
+      end
+
+      sig { params(node: SyntaxTree::CallNode).void }
+      def visit_call(node)
+        method_name = node.message.value
+        return unless DSL_TEST_METHODS.include?(method_name)
+
+        create_document_symbol(
+          name: method_name,
+          kind: :method,
+          range_node: node,
+          selection_range_node: node,
+        )
+      end
+
+      sig { params(node: SyntaxTree::Command).void }
+      def handle_dsl_test_methods(node)
+        argument = node.arguments.parts.first
+        return unless argument.is_a?(SyntaxTree::StringLiteral)
+
+        test_name = argument.child_nodes.first.value
+
+        create_document_symbol(
+          name: test_name,
+          kind: :method,
+          range_node: argument,
+          selection_range_node: argument,
+        )
       end
 
       sig { override.params(node: SyntaxTree::ConstPathField).void }
