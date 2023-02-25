@@ -1,6 +1,8 @@
 # typed: strict
 # frozen_string_literal: true
 
+# TODO: skip some things if not within a test class?
+
 module RubyLsp
   module Requests
     # ![Document symbol demo](../../misc/document_symbol.gif)
@@ -62,7 +64,10 @@ module RubyLsp
       )
 
       ATTR_ACCESSORS = T.let(["attr_reader", "attr_writer", "attr_accessor"].freeze, T::Array[String])
-      DSL_TEST_METHODS = T.let(["test", "it", "specify", "setup", "teardown"].freeze, T::Array[String])
+      DSL_TEST_METHODS = T.let(
+        ["test", "subject", "it", "specify", "setup", "teardown", "before", "after"].freeze,
+        T::Array[String],
+      )
       DSL_BLOCK_METHODS = T.let(["describe", "context", "before", "after"].freeze, T::Array[String])
 
       class SymbolHierarchyRoot
@@ -94,6 +99,42 @@ module RubyLsp
         @root.children
       end
 
+      sig { override.params(node: SyntaxTree::MethodAddBlock).void }
+      def visit_method_add_block(node)
+        require "debug"
+        # debugger
+        if node.call.arguments.is_a?(SyntaxTree::ArgParen)
+
+          x = node.call.arguments.arguments.parts.first
+          return unless x.is_a?(SyntaxTree::VarRef)
+
+          name = x.value.value
+          return unless name
+
+          # puts x.class
+
+          symbol = create_document_symbol(
+            name: name,
+            kind: :class,
+            range_node: node,
+            selection_range_node: node,
+          )
+
+          @stack << symbol
+          visit(node.block)
+          @stack.pop
+        elsif node.call.arguments.is_a?(SyntaxTree::Args)
+          # require "debug"
+          # debugger
+          symbol = create_document_symbol(
+            name: node.call.message.value,
+            kind: :class,
+            range_node: node,
+            selection_range_node: node,
+          )
+        end
+      end
+
       sig { override.params(node: SyntaxTree::ClassDeclaration).void }
       def visit_class(node)
         symbol = create_document_symbol(
@@ -112,15 +153,15 @@ module RubyLsp
       def visit_command(node)
         handle_attr_accessors(node) if ATTR_ACCESSORS.include?(node.message.value)
         handle_dsl_test_methods(node) if DSL_TEST_METHODS.include?(node.message.value)
+        handle_dsl_block_methods(node) if DSL_BLOCK_METHODS.include?(node.message.value)
       end
 
       sig { params(node: SyntaxTree::Command).void }
       def handle_dsl_block_methods(node)
-        # require "debug"
-        # debugger
+        name = node.arguments.parts.first.parts.first.value
         symbol = create_document_symbol(
-          name: node.arguments.parts.first.parts.first.value, # "blah", # full_constant_name(node.constant),
-          kind: :module,
+          name: name,
+          kind: :namespace,
           range_node: node,
           selection_range_node: node,
         )
@@ -147,7 +188,25 @@ module RubyLsp
       sig { params(node: SyntaxTree::CallNode).void }
       def visit_call(node)
         method_name = node.message.value
-        return unless DSL_TEST_METHODS.include?(method_name)
+        raise "t"
+        puts "x: #{method_name}}"
+        return unless DSL_TEST_METHODS.include?(method_name) || DSL_BLOCK_METHODS.include?(method_name)
+
+        # return unless node.arguments.is_a?(SyntaxTree::ArgParen)
+
+        if node.arguments.is_a?(SyntaxTree::ArgParen) && node.arguments.arguments.parts.any?
+          # require "debug"
+          # debugger
+          if node.arguments.arguments.parts.first.is_a?(SyntaxTree::VarRef)
+            # SyntaxTree::VarRef
+            #
+            #
+          end
+
+          if node.arguments.arguments.parts.first.is_a?(SyntaxTree::SymbolLiteral)
+            method_name += " :" + node.arguments.arguments.parts.first.value.value
+          end
+        end
 
         create_document_symbol(
           name: method_name,
