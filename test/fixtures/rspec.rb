@@ -4,13 +4,16 @@
 class Boot
 end
 
-RSpec.describe(Loott) do
+RSpec.describe(Widget) do
   it "hello" do
   end
 end
 
-before do
-  1 + 1
+module Blah
+  RSpec.describe(Widget) do
+    it "hello" do
+    end
+  end
 end
 
 describe(Foot) do

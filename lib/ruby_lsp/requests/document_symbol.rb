@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 # TODO: skip some things if not within a test class?
+require "debug"
 
 module RubyLsp
   module Requests
@@ -101,8 +102,11 @@ module RubyLsp
 
       sig { override.params(node: SyntaxTree::MethodAddBlock).void }
       def visit_method_add_block(node)
-        require "debug"
-        # debugger
+        # node.call.receiver.value.value == "RSpec"
+        # node.call.child_nodes[1].value == ".'"
+        # node.call.child_nodes[2].value == "describe"
+        #
+        # RSpec.describe
         if node.call.arguments.is_a?(SyntaxTree::ArgParen)
 
           x = node.call.arguments.arguments.parts.first
@@ -110,8 +114,6 @@ module RubyLsp
 
           name = x.value.value
           return unless name
-
-          # puts x.class
 
           symbol = create_document_symbol(
             name: name,
@@ -124,9 +126,11 @@ module RubyLsp
           visit(node.block)
           @stack.pop
         elsif node.call.arguments.is_a?(SyntaxTree::Args)
+          # subject, setup, before, after, teardown
+          # debugger
           # require "debug"
           # debugger
-          symbol = create_document_symbol(
+          create_document_symbol(
             name: node.call.message.value,
             kind: :class,
             range_node: node,
@@ -183,37 +187,6 @@ module RubyLsp
             selection_range_node: argument,
           )
         end
-      end
-
-      sig { params(node: SyntaxTree::CallNode).void }
-      def visit_call(node)
-        method_name = node.message.value
-        raise "t"
-        puts "x: #{method_name}}"
-        return unless DSL_TEST_METHODS.include?(method_name) || DSL_BLOCK_METHODS.include?(method_name)
-
-        # return unless node.arguments.is_a?(SyntaxTree::ArgParen)
-
-        if node.arguments.is_a?(SyntaxTree::ArgParen) && node.arguments.arguments.parts.any?
-          # require "debug"
-          # debugger
-          if node.arguments.arguments.parts.first.is_a?(SyntaxTree::VarRef)
-            # SyntaxTree::VarRef
-            #
-            #
-          end
-
-          if node.arguments.arguments.parts.first.is_a?(SyntaxTree::SymbolLiteral)
-            method_name += " :" + node.arguments.arguments.parts.first.value.value
-          end
-        end
-
-        create_document_symbol(
-          name: method_name,
-          kind: :method,
-          range_node: node,
-          selection_range_node: node,
-        )
       end
 
       sig { params(node: SyntaxTree::Command).void }
