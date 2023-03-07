@@ -108,7 +108,7 @@ module RubyLsp
           add_def_range(node)
         when SyntaxTree::StringConcat
           add_string_concat(node)
-          return # seems this isn't needed?
+          return
         end
 
         super
@@ -233,12 +233,14 @@ module RubyLsp
             if receiver.is_a?(SyntaxTree::CallNode) || receiver.is_a?(SyntaxTree::CommandCall)
               receiver = receiver.receiver
             end
+            visit(node.block) if node.is_a?(SyntaxTree::CommandCall)
           else
             break
           end
         end
 
         if receiver
+          # We need to exclude VarRef here to prevent a duplicate range:
           add_lines_range(
             receiver.location.start_line,
             node.location.end_line - 1,
