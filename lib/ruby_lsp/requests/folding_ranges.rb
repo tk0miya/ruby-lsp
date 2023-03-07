@@ -287,7 +287,6 @@ module RubyLsp
 
       sig { params(start_line: Integer, end_line: Integer).void }
       def add_lines_range(start_line, end_line)
-        # debugger
         return if start_line >= end_line
 
         @ranges << LanguageServer::Protocol::Interface::FoldingRange.new(
