@@ -108,7 +108,7 @@ module RubyLsp
           add_def_range(node)
         when SyntaxTree::StringConcat
           add_string_concat(node)
-          return
+          return # seems this isn't needed?
         end
 
         super
@@ -238,9 +238,15 @@ module RubyLsp
           end
         end
 
-        add_lines_range(receiver.location.start_line, node.location.end_line - 1) if receiver
+        if receiver
+          add_lines_range(
+            receiver.location.start_line,
+            node.location.end_line - 1,
+          ) unless receiver.is_a?(SyntaxTree::VarRef)
+        end
 
         visit(node.arguments)
+        visit(node.block) if node.is_a?(SyntaxTree::CommandCall)
       end
 
       sig { params(node: SyntaxTree::DefNode).void }
@@ -281,6 +287,7 @@ module RubyLsp
 
       sig { params(start_line: Integer, end_line: Integer).void }
       def add_lines_range(start_line, end_line)
+        # debugger
         return if start_line >= end_line
 
         @ranges << LanguageServer::Protocol::Interface::FoldingRange.new(
