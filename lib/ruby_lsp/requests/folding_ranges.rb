@@ -243,7 +243,7 @@ module RubyLsp
           add_lines_range(
             receiver.location.start_line,
             node.location.end_line - 1,
-          ) unless receiver.is_a?(SyntaxTree::VarRef)
+          ) unless node.is_a?(SyntaxTree::CommandCall) && node.block
         end
 
         visit(node.arguments)
