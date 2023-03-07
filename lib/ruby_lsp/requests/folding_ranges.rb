@@ -115,7 +115,7 @@ module RubyLsp
       end
 
       # This is to prevent duplicate ranges
-      sig { params(node: SyntaxTree::Command).returns(T::Boolean) }
+      sig { params(node: T.any(SyntaxTree::Command, SyntaxTree::CommandCall)).returns(T::Boolean) }
       def same_lines_for_command_and_block?(node)
         node_block = node.block
         return false unless node_block
@@ -239,11 +239,12 @@ module RubyLsp
         end
 
         if receiver
-          # We need to exclude VarRef here to prevent a duplicate range:
-          add_lines_range(
-            receiver.location.start_line,
-            node.location.end_line - 1,
-          ) unless node.is_a?(SyntaxTree::CommandCall) && node.block
+          unless node.is_a?(SyntaxTree::CommandCall) && same_lines_for_command_and_block?(node)
+            add_lines_range(
+              receiver.location.start_line,
+              node.location.end_line - 1,
+            )
+          end
         end
 
         visit(node.arguments)
