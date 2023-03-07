@@ -233,7 +233,6 @@ module RubyLsp
             if receiver.is_a?(SyntaxTree::CallNode) || receiver.is_a?(SyntaxTree::CommandCall)
               receiver = receiver.receiver
             end
-            visit(node.block) if node.is_a?(SyntaxTree::CommandCall)
           else
             break
           end
