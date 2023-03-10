@@ -21,6 +21,7 @@ module RubyLsp
       @jobs = T.let({}, T::Hash[T.any(String, Integer), Job])
       @mutex = T.let(Mutex.new, Mutex)
       @worker = T.let(new_worker, Thread)
+      @syntax_tree = T.let(false, T::Boolean)
 
       Thread.main.priority = 1
     end
@@ -28,6 +29,10 @@ module RubyLsp
     sig { void }
     def start
       warn("Starting Ruby LSP...")
+      if Bundler::LockfileParser.new(Bundler.read_file(Bundler.default_lockfile)).dependencies.key?("syntax_tree")
+        warn("SyntaxTree found in bundle, using it for formatting")
+        @syntax_tree = true
+      end
 
       # Requests that have to be executed sequentially or in the main process are implemented here. All other requests
       # fall under the else branch which just pushes requests to the queue
