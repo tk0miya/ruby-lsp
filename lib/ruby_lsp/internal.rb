@@ -9,6 +9,7 @@ require "bundler"
 
 require "ruby-lsp"
 require "ruby_lsp/utils"
+require "ruby_lsp/worker"
 require "ruby_lsp/server"
 require "ruby_lsp/executor"
 require "ruby_lsp/requests"
