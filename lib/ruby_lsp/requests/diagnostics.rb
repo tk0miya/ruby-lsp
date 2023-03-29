@@ -20,6 +20,7 @@ module RubyLsp
     # ```
     class Diagnostics < BaseRequest
       extend T::Sig
+      MAX_LINES_FOR_RUBOCOP_DIAGNOSTICS = T.let(1500, Integer)
 
       sig { params(document: Document).void }
       def initialize(document)
@@ -35,6 +36,8 @@ module RubyLsp
 
         # Don't try to run RuboCop diagnostics for files outside the current working directory
         return unless @uri.start_with?(WORKSPACE_URI)
+
+        return if @document.source.lines.length > MAX_LINES_FOR_RUBOCOP_DIAGNOSTICS
 
         Support::RuboCopDiagnosticsRunner.instance.run(@uri, @document)
       end
