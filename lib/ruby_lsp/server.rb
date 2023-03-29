@@ -85,6 +85,9 @@ module RubyLsp
           request = job.request
           @mutex.synchronize { @jobs.delete(request[:id]) }
 
+          uri = request.dig(:params, :textDocument, :uri)
+          version = @store.get(uri).version if uri
+
           result = if job.cancelled
             # We need to return nil to the client even if the request was cancelled
             Result.new(response: nil, notifications: [])
@@ -92,6 +95,7 @@ module RubyLsp
             Executor.new(@store).execute(request)
           end
 
+          result = Result.new(response: nil, notifications: []) if uri && version != @store.get(uri).version
           finalize_request(result, request)
         end
       end
