@@ -7,6 +7,7 @@ require "language_server-protocol"
 require "benchmark"
 require "bundler"
 require "singleton"
+require "pathname"
 
 require "ruby-lsp"
 require "ruby_lsp/utils"

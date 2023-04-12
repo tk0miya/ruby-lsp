@@ -38,6 +38,17 @@ class IndexTest < Minitest::Test
     assert_equal(current_files, RubyLsp::Index.instance.files)
   end
 
+  def test_synchronizing_files_with_spaces
+    path = File.expand_path("../lib/ruby_lsp/space%20name.rb", __dir__)
+
+    RubyLsp::Index.instance.synchronize([{
+      uri: "file://#{path}",
+      type: RubyLsp::Constant::FileChangeType::CREATED,
+    }])
+
+    assert_includes(RubyLsp::Index.instance.files, "ruby_lsp/space\\ name")
+  end
+
   def test_synchronizing_a_folder
     current_files = RubyLsp::Index.instance.files.dup
     path = File.expand_path("../lib/ruby_lsp/new_folder", __dir__)

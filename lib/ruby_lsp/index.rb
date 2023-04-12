@@ -1,6 +1,8 @@
 # typed: strict
 # frozen_string_literal: true
 
+require "shellwords"
+
 module RubyLsp
   class Index
     extend T::Sig
@@ -24,25 +26,27 @@ module RubyLsp
 
       changes.each do |change|
         # File change events include folders, but we're only interested in files
-        file_path = change[:uri].delete_prefix("file://")
-        next if File.directory?(file_path)
+        uri = URI(change[:uri])
+        file_path = Shellwords.escape(URI.decode_www_form_component(T.must(uri.path)))
+        path = Pathname.new(file_path)
+        next if path.directory?
 
         # Get the relative path based on the LOAD_PATH
         base_load_path = $LOAD_PATH.find { |path| file_path.start_with?(path) }
         next if base_load_path.nil?
 
-        file_path.delete_prefix!("#{base_load_path}/")
-        file_path.delete_suffix!(".rb")
+        require_path = path.relative_path_from(base_load_path).to_s
+        require_path.delete_suffix!(".rb")
 
         case change[:type]
         when Constant::FileChangeType::CREATED
           has_addition_or_removals = true
-          @files << file_path
+          @files << require_path
         when Constant::FileChangeType::CHANGED
           # Do nothing for now
         when Constant::FileChangeType::DELETED
           has_addition_or_removals = true
-          @files.delete(file_path)
+          @files.delete(require_path)
         end
       end
 

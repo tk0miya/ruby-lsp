@@ -478,10 +478,10 @@ module RubyLsp
         )
       end
 
-      # # # Dynamically registered capabilities
+      # Dynamically registered capabilities
       file_watching_caps = options.dig(:capabilities, :workspace, :didChangeWatchedFiles)
 
-      # # Not every client supports dynamic registartion or file watching
+      # Not every client supports dynamic registration or file watching
       if file_watching_caps&.dig(:dynamicRegistration) && file_watching_caps&.dig(:relativePatternSupport)
         @messages << Request.new(
           message: "client/registerCapability",
