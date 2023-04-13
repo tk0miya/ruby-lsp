@@ -37,6 +37,7 @@ module RubyLsp
     autoload :InlayHints, "ruby_lsp/requests/inlay_hints"
     autoload :PathCompletion, "ruby_lsp/requests/path_completion"
     autoload :CodeLens, "ruby_lsp/requests/code_lens"
+    autoload :Definition, "ruby_lsp/requests/definition"
 
     # :nodoc:
     module Support

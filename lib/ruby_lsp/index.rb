@@ -16,8 +16,20 @@ module RubyLsp
 
     sig { void }
     def initialize
-      @files = T.let(collect_files, T::Array[String])
-      @prefix_tree = T.let(Requests::Support::PrefixTree.new(@files), Requests::Support::PrefixTree)
+      @files = T.let(
+        $LOAD_PATH.flat_map { |p| Dir.glob("#{p}/**/*.rb") },
+        T::Array[String],
+      )
+
+      @prefix_tree = T.let(Requests::Support::PrefixTree.new(files_to_prefix_tree), Requests::Support::PrefixTree)
+      @constants = T.let(
+        Hash.new do |h, k|
+          h[k] = []
+        end,
+        T::Hash[String, T::Array[{ uri: String, location: SyntaxTree::Location }]],
+      )
+
+      @files.each { |file| index_single(file) }
     end
 
     sig { params(changes: T::Array[{ uri: String, type: Integer }]).void }
@@ -28,39 +40,67 @@ module RubyLsp
         # File change events include folders, but we're only interested in files
         uri = URI(change[:uri])
         file_path = Shellwords.escape(URI.decode_www_form_component(T.must(uri.path)))
-        path = Pathname.new(file_path)
-        next if path.directory?
+        next if File.directory?(file_path)
 
-        # Get the relative path based on the LOAD_PATH
-        base_load_path = $LOAD_PATH.find { |path| file_path.start_with?(path) }
-        next if base_load_path.nil?
-
-        require_path = path.relative_path_from(base_load_path).to_s
-        require_path.delete_suffix!(".rb")
+        remove_entries_for_file(file_path)
 
         case change[:type]
         when Constant::FileChangeType::CREATED
           has_addition_or_removals = true
-          @files << require_path
+          @files << file_path
+          index_single(file_path)
         when Constant::FileChangeType::CHANGED
           # Do nothing for now
+          index_single(file_path)
         when Constant::FileChangeType::DELETED
           has_addition_or_removals = true
-          @files.delete(require_path)
+          @files.delete(file_path)
         end
       end
 
-      @prefix_tree = Requests::Support::PrefixTree.new(@files) if has_addition_or_removals
+      @prefix_tree = Requests::Support::PrefixTree.new(files_to_prefix_tree) if has_addition_or_removals
+    end
+
+    sig { params(constant_name: String).returns(T.nilable(T::Array[{ uri: String, location: SyntaxTree::Location }])) }
+    def fetch_constant(constant_name)
+      @constants[constant_name]
     end
 
     private
 
+    sig { params(path: String).void }
+    def index_single(path)
+      content = File.read(path)
+      ast = SyntaxTree.parse(content)
+      visitor = IndexVisitor.new
+      visitor.visit(ast)
+
+      visitor.consts.each do |constant|
+        T.must(@constants[constant.constant.constant.value]) << {
+          uri: "file://#{path}",
+          location: constant.location,
+        }
+      end
+    rescue SyntaxTree::Parser::ParseError
+      # If we fail to parse a file we just skip it
+    end
+
+    sig { params(file_path: String).void }
+    def remove_entries_for_file(file_path)
+      @constants.each do |constant_name, entries|
+        entries.delete_if { |entry| entry[:uri].end_with?(file_path) }
+
+        @constants.delete(constant_name) if entries.empty?
+      end
+    end
+
     sig { returns(T::Array[String]) }
-    def collect_files
-      $LOAD_PATH.flat_map do |p|
-        Dir.glob("**/*.rb", base: p)
-      end.map! do |result|
-        result.delete_suffix!(".rb")
+    def files_to_prefix_tree
+      @files.map do |file|
+        base = $LOAD_PATH.find { |path| file.start_with?(path) }
+        file
+          .delete_prefix(base)
+          .delete_suffix(".rb")
       end
     end
   end

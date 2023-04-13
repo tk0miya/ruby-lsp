@@ -146,7 +146,23 @@ module RubyLsp
         code_lens(uri)
       when "workspace/didChangeWatchedFiles"
         did_change_watched_files(request.dig(:params, :changes))
+      when "textDocument/definition"
+        definition(uri, request.dig(:params, :position))
       end
+    end
+
+    sig { params(uri: String, position: Document::PositionShape).returns(T.nilable(T::Array[Interface::Location])) }
+    def definition(uri, position)
+      document = @store.get(uri)
+      document.parse
+      return if document.syntax_error?
+
+      target, parent = document.locate_node(position)
+      target = parent if !target.is_a?(SyntaxTree::Const) && parent.is_a?(SyntaxTree::Const)
+
+      listener = Requests::Definition.new
+      EventEmitter.new(listener).emit_for_target(target)
+      listener.response
     end
 
     sig { params(changes: T::Array[{ uri: String, type: Integer }]).returns(Object) }
@@ -527,6 +543,7 @@ module RubyLsp
           inlay_hint_provider: inlay_hint_provider,
           completion_provider: completion_provider,
           code_lens_provider: code_lens_provider,
+          definition_provider: true,
         ),
       )
     end
