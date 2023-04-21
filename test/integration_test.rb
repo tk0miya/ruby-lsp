@@ -52,8 +52,6 @@ class IntegrationTest < Minitest::Test
     initialize_lsp(["documentSymbols"])
     open_file_with("class Foo\nend")
 
-    assert_telemetry("textDocument/didOpen")
-
     response = make_request("textDocument/documentSymbol", { textDocument: { uri: "file://#{__FILE__}" } })
     symbol = response[:result].first
     assert_equal("Foo", symbol[:name])
@@ -63,8 +61,6 @@ class IntegrationTest < Minitest::Test
   def test_document_highlight
     initialize_lsp(["documentHighlights"])
     open_file_with("$foo = 1")
-
-    assert_telemetry("textDocument/didOpen")
 
     response = make_request(
       "textDocument/documentHighlight",
@@ -78,8 +74,6 @@ class IntegrationTest < Minitest::Test
   def test_hover
     initialize_lsp(["hover"])
     open_file_with("$foo = 1")
-
-    assert_telemetry("textDocument/didOpen")
 
     response = make_request(
       "textDocument/hover",
@@ -99,15 +93,13 @@ class IntegrationTest < Minitest::Test
       { textDocument: { uri: "file://#{__FILE__}" }, position: { line: 0, character: 1 } },
     )
 
-    assert_nil(response[:result])
+    assert_empty(response[:result])
     assert_nil(response[:error])
   end
 
   def test_semantic_highlighting
     initialize_lsp(["semanticHighlighting"])
     open_file_with("class Foo\nend")
-
-    assert_telemetry("textDocument/didOpen")
 
     response = make_request("textDocument/semanticTokens/full", { textDocument: { uri: "file://#{__FILE__}" } })
     assert_equal([0, 6, 3, 2, 1], response[:result][:data])
@@ -121,8 +113,6 @@ class IntegrationTest < Minitest::Test
       end
     DOC
 
-    assert_telemetry("textDocument/didOpen")
-
     response = make_request("textDocument/documentLink", { textDocument: { uri: "file://#{__FILE__}" } })
     assert_match(/syntax_tree/, response.dig(:result, 0, :target))
   end
@@ -130,8 +120,6 @@ class IntegrationTest < Minitest::Test
   def test_formatting
     initialize_lsp(["formatting"])
     open_file_with("class Foo\nend")
-
-    assert_telemetry("textDocument/didOpen")
 
     response = make_request("textDocument/formatting", { textDocument: { uri: "file://#{__FILE__}" } })
     assert_equal(<<~FORMATTED, response[:result].first[:newText])
@@ -147,8 +135,6 @@ class IntegrationTest < Minitest::Test
     initialize_lsp(["onTypeFormatting"])
     open_file_with("class Foo\nend")
 
-    assert_telemetry("textDocument/didOpen")
-
     response = make_request(
       "textDocument/onTypeFormatting",
       { textDocument: { uri: "file://#{__FILE__}", position: { line: 0, character: 0 }, character: "\n" } },
@@ -159,8 +145,6 @@ class IntegrationTest < Minitest::Test
   def test_code_actions
     initialize_lsp(["codeActions"])
     open_file_with("class Foo\nend")
-
-    assert_telemetry("textDocument/didOpen")
 
     response = make_request(
       "textDocument/codeAction",
@@ -216,8 +200,6 @@ class IntegrationTest < Minitest::Test
     initialize_lsp(["codeActions"])
     open_file_with("class Foo\nend")
 
-    assert_telemetry("textDocument/didOpen")
-
     response = make_request(
       "codeAction/resolve",
       {
@@ -234,8 +216,6 @@ class IntegrationTest < Minitest::Test
   def test_document_did_close
     initialize_lsp([])
     open_file_with("class Foo\nend")
-
-    assert_telemetry("textDocument/didOpen")
 
     assert(send_request("textDocument/didClose", { textDocument: { uri: "file://#{__FILE__}" } }))
   end
@@ -260,8 +240,6 @@ class IntegrationTest < Minitest::Test
     initialize_lsp(["foldingRanges"])
     open_file_with("class Foo\n\nend")
 
-    assert_telemetry("textDocument/didOpen")
-
     response = make_request("textDocument/foldingRange", { textDocument: { uri: "file://#{__FILE__}" } })
     assert_equal({ startLine: 0, endLine: 1, kind: "region" }, response[:result].first)
   end
@@ -269,8 +247,6 @@ class IntegrationTest < Minitest::Test
   def test_code_lens
     initialize_lsp(["codeLens"], experimental_features_enabled: true)
     open_file_with("class Foo\n\nend")
-
-    assert_telemetry("textDocument/didOpen")
 
     response = make_request("textDocument/codeLens", { textDocument: { uri: "file://#{__FILE__}" } })
     assert_empty(response[:result])
@@ -282,18 +258,13 @@ class IntegrationTest < Minitest::Test
 
     send_request("textDocument/foldingRange", { textDocument: { uri: "file://#{__FILE__}" } })
 
-    assert_telemetry("textDocument/didOpen")
-
     response = read_response("textDocument/foldingRange")
     assert_equal({ startLine: 0, endLine: 1, kind: "region" }, response[:result].first)
-    assert_telemetry("textDocument/foldingRange")
   end
 
   def test_selection_ranges
     initialize_lsp(["selectionRanges"])
     open_file_with("class Foo\nend")
-
-    assert_telemetry("textDocument/didOpen")
 
     response = make_request(
       "textDocument/selectionRange",
@@ -321,15 +292,13 @@ class IntegrationTest < Minitest::Test
       },
     )
 
-    assert_nil(response[:result])
+    assert_nil(response[:result].first)
     assert_nil(response[:error])
   end
 
   def test_diagnostics
     initialize_lsp([])
     open_file_with("class Foo\nend")
-
-    assert_telemetry("textDocument/didOpen")
 
     response = make_request("textDocument/diagnostic", { textDocument: { uri: "file://#{__FILE__}" } })
 
@@ -338,16 +307,6 @@ class IntegrationTest < Minitest::Test
   end
 
   private
-
-  def assert_telemetry(request)
-    telemetry_response = read_response("telemetry/event")
-    expected_uri = __FILE__.sub(Dir.home, "~")
-
-    assert_equal(expected_uri, telemetry_response.dig(:params, :uri))
-    assert_equal(RubyLsp::VERSION, telemetry_response.dig(:params, :lspVersion))
-    assert_equal(request, telemetry_response.dig(:params, :request))
-    assert_in_delta(0.5, telemetry_response.dig(:params, :requestTime), 2)
-  end
 
   def make_request(request, params = nil)
     send_request(request, params)
@@ -404,6 +363,6 @@ class IntegrationTest < Minitest::Test
   end
 
   def open_file_with(content)
-    make_request("textDocument/didOpen", { textDocument: { uri: "file://#{__FILE__}", text: content } })
+    send_request("textDocument/didOpen", { textDocument: { uri: "file://#{__FILE__}", text: content } })
   end
 end
