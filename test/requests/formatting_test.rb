@@ -13,7 +13,9 @@ class FormattingTest < Minitest::Test
     RUBY
   end
 
-  def test_formats_with_rubocop_when_present
+  def test_formats_with_rubocop_when_present_and_syntax_tree_not_present
+    stub_dependencies(rubocop: true, syntax_tree: false)
+
     assert_equal(<<~RUBY, formatted_document)
       # typed: true
       # frozen_string_literal: true
@@ -25,15 +27,35 @@ class FormattingTest < Minitest::Test
     RUBY
   end
 
-  def test_formats_with_syntax_tree_when_rubocop_is_not_present
-    with_uninstalled_rubocop do
-      assert_equal(<<~RUBY, formatted_document)
-        class Foo
-          def foo
-          end
+  def test_formats_with_syntax_tree_when_present_and_rubocop_not_present
+    stub_dependencies(rubocop: false, syntax_tree: true)
+
+    assert_equal(<<~RUBY, formatted_document)
+      class Foo
+        def foo
         end
-      RUBY
-    end
+      end
+    RUBY
+  end
+
+  def test_formats_with_rubocop_when_present_and_syntax_tree_also_present
+    stub_dependencies(rubocop: true, syntax_tree: true)
+
+    assert_equal(<<~RUBY, formatted_document)
+      # typed: true
+      # frozen_string_literal: true
+
+      class Foo
+        def foo
+        end
+      end
+    RUBY
+  end
+
+  def test_does_not_format_with_neither_syntax_tree_nor_rubocop_are_present
+    stub_dependencies(rubocop: false, syntax_tree: false)
+    document = RubyLsp::Document.new(source: "def foo", version: 1, uri: "file://#{__FILE__}")
+    assert_nil(RubyLsp::Requests::Formatting.new(document).run)
   end
 
   def test_syntax_tree_formatting_uses_options_from_streerc
@@ -41,7 +63,6 @@ class FormattingTest < Minitest::Test
       --print-width=100
       --plugins=plugin/trailing_comma
     TXT
-
     with_syntax_tree_config_file(config_contents) do
       @document = RubyLsp::Document.new(source: +<<~RUBY, version: 1, uri: "file://#{__FILE__}")
         class Foo
@@ -166,5 +187,12 @@ class FormattingTest < Minitest::Test
     return unless defined?(RubyLsp::Requests::Support::SyntaxTreeFormattingRunner)
 
     T.unsafe(Singleton).__init__(RubyLsp::Requests::Support::SyntaxTreeFormattingRunner)
+  end
+
+  def stub_dependencies(rubocop:, syntax_tree:)
+    dependencies = {}
+    dependencies["syntax_tree"] = "..." if syntax_tree
+    dependencies["rubocop"] = "..." if rubocop
+    Bundler.locked_gems.stubs(:dependencies).returns(dependencies)
   end
 end

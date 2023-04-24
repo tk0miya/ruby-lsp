@@ -12,7 +12,11 @@ module RubyLsp
     # request uses RuboCop to fix auto-correctable offenses in the document. This requires enabling format on save and
     # registering the ruby-lsp as the Ruby formatter.
     #
-    # If RuboCop is not available, the request will fall back to SyntaxTree.
+    # The `rubyLsp.formatter` setting specifies which formatter to use.
+    # If set to `auto`` then it behaves as follows:
+    # * It will use RuboCop if it is part of the bundle.
+    # * If RuboCop is not available, and `syntax_tree` is a direct dependency, it will use that.
+    # * Otherwise, no formatting will be applied.
     #
     # # Example
     #
@@ -24,6 +28,7 @@ module RubyLsp
     class Formatting < BaseRequest
       class Error < StandardError; end
       class InvalidFormatter < StandardError; end
+      class NoFormatter < StandardError; end
 
       extend T::Sig
 
@@ -34,12 +39,28 @@ module RubyLsp
         @uri = T.let(document.uri, String)
         @formatter = T.let(
           if formatter == "auto"
-            defined?(Support::RuboCopFormattingRunner) ? "rubocop" : "syntax_tree"
+            if rubocop_as_direct_dependency
+              "rubocop"
+            elsif syntax_tree_as_direct_dependency
+              "syntax_tree"
+            else
+              "none"
+            end
           else
             formatter
           end,
           String,
         )
+      end
+
+      sig { returns(T::Boolean) }
+      def syntax_tree_as_direct_dependency
+        Bundler.locked_gems.dependencies.key?("syntax_tree")
+      end
+
+      sig { returns(T::Boolean) }
+      def rubocop_as_direct_dependency
+        Bundler.locked_gems.dependencies.keys.grep(/rubocop-?/).any?
       end
 
       sig { override.returns(T.nilable(T.all(T::Array[Interface::TextEdit], Object))) }
