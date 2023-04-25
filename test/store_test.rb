@@ -157,4 +157,28 @@ class StoreTest < Minitest::Test
       @store.get(uri),
     )
   end
+
+  def test_formatter_detects_rubocop
+    stub_dependencies(rubocop: true, syntax_tree: false)
+    assert_equal("rubocop", @store.detected_formatter)
+  end
+
+  def test_formatter_detects_syntax_tree
+    stub_dependencies(rubocop: false, syntax_tree: true)
+    assert_equal("syntax_tree", @store.detected_formatter)
+  end
+
+  def test_gives_rubocop_precedence_if_syntax_tree_also_present
+    stub_dependencies(rubocop: true, syntax_tree: true)
+    assert_equal("rubocop", @store.detected_formatter)
+  end
+
+  private
+
+  def stub_dependencies(rubocop:, syntax_tree:)
+    dependencies = {}
+    dependencies["syntax_tree"] = "..." if syntax_tree
+    dependencies["rubocop"] = "..." if rubocop
+    Bundler.locked_gems.stubs(:dependencies).returns(dependencies)
+  end
 end

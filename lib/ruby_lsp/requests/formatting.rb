@@ -33,29 +33,11 @@ module RubyLsp
       extend T::Sig
 
       sig { params(document: Document, formatter: String).void }
-      def initialize(document, formatter: "auto")
+      def initialize(document, formatter: Store.new.detected_formatter)
         super(document)
 
         @uri = T.let(document.uri, String)
-        @formatter = T.let(
-          if formatter == "auto"
-            if direct_dependency?(/^rubocop-?$/)
-              "rubocop"
-            elsif direct_dependency?(/^syntax_tree$/)
-              "syntax_tree"
-            else
-              "none"
-            end
-          else
-            formatter
-          end,
-          String,
-        )
-      end
-
-      sig { params(gem_pattern: Regexp).returns(T::Boolean) }
-      def direct_dependency?(gem_pattern)
-        Bundler.locked_gems.dependencies.keys.grep(gem_pattern).any?
+        @formatter = formatter
       end
 
       sig { override.returns(T.nilable(T.all(T::Array[Interface::TextEdit], Object))) }

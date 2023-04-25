@@ -260,7 +260,7 @@ module RubyLsp
 
     sig { params(uri: String).returns(T.nilable(T::Array[Interface::TextEdit])) }
     def formatting(uri)
-      Requests::Formatting.new(@store.get(uri), formatter: @store.formatter).run
+      Requests::Formatting.new(@store.get(uri), formatter: @store.detected_formatter).run
     end
 
     sig do

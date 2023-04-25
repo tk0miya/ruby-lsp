@@ -13,10 +13,8 @@ class FormattingTest < Minitest::Test
     RUBY
   end
 
-  def test_formats_with_rubocop_when_present_and_syntax_tree_not_present
-    stub_dependencies(rubocop: true, syntax_tree: false)
-
-    assert_equal(<<~RUBY, formatted_document)
+  def test_formats_with_rubocop
+    assert_equal(<<~RUBY, formatted_document("rubocop"))
       # typed: true
       # frozen_string_literal: true
 
@@ -27,10 +25,8 @@ class FormattingTest < Minitest::Test
     RUBY
   end
 
-  def test_formats_with_syntax_tree_when_present_and_rubocop_not_present
-    stub_dependencies(rubocop: false, syntax_tree: true)
-
-    assert_equal(<<~RUBY, formatted_document)
+  def test_formats_with_syntax_tree
+    assert_equal(<<~RUBY, formatted_document("syntax_tree"))
       class Foo
         def foo
         end
@@ -38,24 +34,9 @@ class FormattingTest < Minitest::Test
     RUBY
   end
 
-  def test_formats_with_rubocop_when_present_and_syntax_tree_also_present
-    stub_dependencies(rubocop: true, syntax_tree: true)
-
-    assert_equal(<<~RUBY, formatted_document)
-      # typed: true
-      # frozen_string_literal: true
-
-      class Foo
-        def foo
-        end
-      end
-    RUBY
-  end
-
-  def test_does_not_format_with_neither_syntax_tree_nor_rubocop_are_present
-    stub_dependencies(rubocop: false, syntax_tree: false)
+  def test_does_not_format_with_formatter_is_none
     document = RubyLsp::Document.new(source: "def foo", version: 1, uri: "file://#{__FILE__}")
-    assert_nil(RubyLsp::Requests::Formatting.new(document).run)
+    assert_nil(RubyLsp::Requests::Formatting.new(document, formatter: "none").run)
   end
 
   def test_syntax_tree_formatting_uses_options_from_streerc
@@ -88,16 +69,14 @@ class FormattingTest < Minitest::Test
   end
 
   def test_syntax_tree_formatting_ignores_syntax_invalid_documents
-    with_uninstalled_rubocop do
-      require "ruby_lsp/requests"
-      document = RubyLsp::Document.new(source: "def foo", version: 1, uri: "file://#{__FILE__}")
-      assert_nil(RubyLsp::Requests::Formatting.new(document).run)
-    end
+    require "ruby_lsp/requests"
+    document = RubyLsp::Document.new(source: "def foo", version: 1, uri: "file://#{__FILE__}")
+    assert_nil(RubyLsp::Requests::Formatting.new(document, formatter: "syntax_tree").run)
   end
 
   def test_rubocop_formatting_ignores_syntax_invalid_documents
     document = RubyLsp::Document.new(source: "def foo", version: 1, uri: "file://#{__FILE__}")
-    assert_nil(RubyLsp::Requests::Formatting.new(document).run)
+    assert_nil(RubyLsp::Requests::Formatting.new(document, formatter: "rubocop").run)
   end
 
   def test_returns_nil_if_document_is_already_formatted
@@ -143,31 +122,7 @@ class FormattingTest < Minitest::Test
 
   private
 
-  def with_uninstalled_rubocop(&block)
-    rubocop_paths = $LOAD_PATH.select { |path| path.include?("gems/rubocop") }
-    rubocop_paths.each { |path| $LOAD_PATH.delete(path) }
-    $LOADED_FEATURES.delete_if do |path|
-      path.include?("ruby_lsp/requests") || path.include?("gems/rubocop") || path.include?("rubocop/cop/ruby_lsp")
-    end
-    unload_constants
-
-    block.call
-  ensure
-    $LOAD_PATH.unshift(*rubocop_paths)
-    $LOADED_FEATURES.delete_if { |path| path.include?("ruby_lsp/requests") }
-    RubyLsp.send(:remove_const, :Requests)
-    require "ruby_lsp/requests"
-    require "rubocop/cop/ruby_lsp/use_language_server_aliases"
-  end
-
-  def unload_constants
-    RubyLsp.send(:remove_const, :Requests)
-    Object.send(:remove_const, :RuboCop)
-  rescue NameError
-    # Constants are already unloaded
-  end
-
-  def formatted_document(formatter = "auto")
+  def formatted_document(formatter)
     require "ruby_lsp/requests"
     RubyLsp::Requests::Formatting.new(@document, formatter: formatter).run&.first&.new_text
   end
