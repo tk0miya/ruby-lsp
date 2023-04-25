@@ -39,9 +39,9 @@ module RubyLsp
         @uri = T.let(document.uri, String)
         @formatter = T.let(
           if formatter == "auto"
-            if rubocop_as_direct_dependency
+            if direct_dependency?(/^rubocop-?$/)
               "rubocop"
-            elsif syntax_tree_as_direct_dependency
+            elsif direct_dependency?(/^syntax_tree$/)
               "syntax_tree"
             else
               "none"
@@ -53,14 +53,9 @@ module RubyLsp
         )
       end
 
-      sig { returns(T::Boolean) }
-      def syntax_tree_as_direct_dependency
-        Bundler.locked_gems.dependencies.key?("syntax_tree")
-      end
-
-      sig { returns(T::Boolean) }
-      def rubocop_as_direct_dependency
-        Bundler.locked_gems.dependencies.keys.grep(/rubocop-?/).any?
+      sig { params(gem_pattern: Regexp).returns(T::Boolean) }
+      def direct_dependency?(gem_pattern)
+        Bundler.locked_gems.dependencies.keys.grep(gem_pattern).any?
       end
 
       sig { override.returns(T.nilable(T.all(T::Array[Interface::TextEdit], Object))) }
