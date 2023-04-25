@@ -44,6 +44,7 @@ class FormattingTest < Minitest::Test
       --print-width=100
       --plugins=plugin/trailing_comma
     TXT
+
     with_syntax_tree_config_file(config_contents) do
       @document = RubyLsp::Document.new(source: +<<~RUBY, version: 1, uri: "file://#{__FILE__}")
         class Foo
