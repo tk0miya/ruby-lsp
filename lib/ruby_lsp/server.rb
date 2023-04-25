@@ -61,10 +61,20 @@ module RubyLsp
       # fall under the else branch which just pushes requests to the queue
       @reader.read do |request|
         case request[:method]
-        when "initialize", "initialized", "textDocument/didOpen", "textDocument/didClose", "textDocument/didChange",
-              "textDocument/formatting", "textDocument/onTypeFormatting", "codeAction/resolve"
+        when "initialize", "initialized", "textDocument/didOpen", "textDocument/didClose"
           result = Executor.new(@store, @message_queue).execute(request)
-          finalize_request(result, request)
+
+          @mutex.synchronize { finalize_request(result, request) }
+        when "textDocument/didChange", "textDocument/formatting", "textDocument/onTypeFormatting", "codeAction/resolve"
+          # Requests that perform text changes must be executed under a mutex lock. The reason is because if the thread
+          # switches in the middle, we could end up allowing a new text edit to be applied before the text edits are
+          # returned, which leads to an inconsistent document state
+          @mutex.synchronize do
+            finalize_request(
+              Executor.new(@store, @message_queue).execute(request),
+              request,
+            )
+          end
         when "$/cancelRequest"
           # Cancel the job if it's still in the queue
           @mutex.synchronize { @jobs[request[:params][:id]]&.cancel }
@@ -82,7 +92,7 @@ module RubyLsp
           @message_dispatcher.join
           @store.clear
 
-          finalize_request(Result.new(response: nil), request)
+          @mutex.synchronize { finalize_request(Result.new(response: nil), request) }
         when "exit"
           # We return zero if shutdown has already been received or one otherwise as per the recommendation in the spec
           # https://microsoft.github.io/language-server-protocol/specification/#exit
@@ -112,8 +122,6 @@ module RubyLsp
           break if job.nil?
 
           request = job.request
-          @mutex.synchronize { @jobs.delete(request[:id]) }
-
           result = if job.cancelled
             # We need to return nil to the client even if the request was cancelled
             Result.new(response: nil)
@@ -121,7 +129,15 @@ module RubyLsp
             Executor.new(@store, @message_queue).execute(request)
           end
 
-          finalize_request(result, request)
+          # If the request got cancelled while it was being executed, then we should not return the actual result back,
+          # but rather return `nil`. Returning a stale result may cause issues depending on which request we're
+          # executing, such as flickering for semantic highlighting or inconsistent document state for text edits
+          result = Result.new(response: nil) if job.cancelled
+
+          @mutex.synchronize do
+            @jobs.delete(request[:id])
+            finalize_request(result, request)
+          end
         end
       end
     end
@@ -129,27 +145,25 @@ module RubyLsp
     # Finalize a Queue::Result. All IO operations should happen here to avoid any issues with cancelling requests
     sig { params(result: Result, request: T::Hash[Symbol, T.untyped]).void }
     def finalize_request(result, request)
-      @mutex.synchronize do
-        error = result.error
-        response = result.response
+      error = result.error
+      response = result.response
 
-        if error
-          @writer.write(
-            id: request[:id],
-            error: {
-              code: Constant::ErrorCodes::INTERNAL_ERROR,
-              message: error.inspect,
-              data: request.to_json,
-            },
-          )
-        elsif response != VOID
-          @writer.write(id: request[:id], result: response)
-        end
+      if error
+        @writer.write(
+          id: request[:id],
+          error: {
+            code: Constant::ErrorCodes::INTERNAL_ERROR,
+            message: error.inspect,
+            data: request.to_json,
+          },
+        )
+      elsif response != VOID
+        @writer.write(id: request[:id], result: response)
+      end
 
-        request_time = result.request_time
-        if request_time
-          @writer.write(method: "telemetry/event", params: telemetry_params(request, request_time, error))
-        end
+      request_time = result.request_time
+      if request_time
+        @writer.write(method: "telemetry/event", params: telemetry_params(request, request_time, error))
       end
     end
 
