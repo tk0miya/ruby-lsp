@@ -158,12 +158,12 @@ class StoreTest < Minitest::Test
     )
   end
 
-  def test_formatter_detects_rubocop
+  def test_detects_rubocop_if_direct_dependency
     stub_dependencies(rubocop: true, syntax_tree: false)
     assert_equal("rubocop", @store.detected_formatter)
   end
 
-  def test_formatter_detects_syntax_tree
+  def test_detects_syntax_tree_if_direct_dependency
     stub_dependencies(rubocop: false, syntax_tree: true)
     assert_equal("syntax_tree", @store.detected_formatter)
   end
