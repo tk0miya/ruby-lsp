@@ -141,4 +141,34 @@ class ExecutorTest < Minitest::Test
   ensure
     @store.delete("file:///foo.rb")
   end
+
+  def test_detects_rubocop_if_direct_dependency
+    stub_dependencies(rubocop: true, syntax_tree: false)
+    store = RubyLsp::Store.new
+    RubyLsp::Executor.new(store, @message_queue)
+    assert_equal("rubocop", store.formatter)
+  end
+
+  def test_detects_syntax_tree_if_direct_dependency
+    stub_dependencies(rubocop: false, syntax_tree: true)
+    store = RubyLsp::Store.new
+    RubyLsp::Executor.new(store, @message_queue)
+    assert_equal("syntax_tree", store.formatter)
+  end
+
+  def test_gives_rubocop_precedence_if_syntax_tree_also_present
+    stub_dependencies(rubocop: true, syntax_tree: true)
+    store = RubyLsp::Store.new
+    RubyLsp::Executor.new(store, @message_queue)
+    assert_equal("rubocop", store.formatter)
+  end
+
+  private
+
+  def stub_dependencies(rubocop:, syntax_tree:)
+    dependencies = {}
+    dependencies["syntax_tree"] = "..." if syntax_tree
+    dependencies["rubocop"] = "..." if rubocop
+    Bundler.locked_gems.stubs(:dependencies).returns(dependencies)
+  end
 end

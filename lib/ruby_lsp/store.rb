@@ -22,11 +22,6 @@ module RubyLsp
       @formatter = T.let("auto", String)
     end
 
-    sig { params(gem_pattern: Regexp).returns(T::Boolean) }
-    def direct_dependency?(gem_pattern)
-      Bundler.locked_gems.dependencies.keys.grep(gem_pattern).any?
-    end
-
     sig { params(uri: String).returns(Document) }
     def get(uri)
       document = @state[uri]
@@ -45,22 +40,6 @@ module RubyLsp
     sig { params(uri: String, edits: T::Array[Document::EditShape], version: Integer).void }
     def push_edits(uri:, edits:, version:)
       T.must(@state[uri]).push_edits(edits, version: version)
-    end
-
-    sig { returns(String) }
-    def detected_formatter
-      return @formatter unless @formatter == "auto"
-
-      @detected_formatter ||= T.let(
-        if direct_dependency?(/^rubocop-?$/)
-          "rubocop"
-        elsif direct_dependency?(/^syntax_tree$/)
-          "syntax_tree"
-        else
-          "none"
-        end,
-        T.nilable(String),
-      )
     end
 
     sig { void }

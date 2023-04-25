@@ -33,7 +33,7 @@ module RubyLsp
       extend T::Sig
 
       sig { params(document: Document, formatter: String).void }
-      def initialize(document, formatter: Store.new.detected_formatter)
+      def initialize(document, formatter: "auto")
         super(document)
 
         @uri = T.let(document.uri, String)

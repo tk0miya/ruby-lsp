@@ -12,6 +12,7 @@ module RubyLsp
       # store
       @store = store
       @message_queue = message_queue
+      @store.formatter = detected_formatter
     end
 
     sig { params(request: T::Hash[Symbol, T.untyped]).returns(Result) }
@@ -260,7 +261,7 @@ module RubyLsp
 
     sig { params(uri: String).returns(T.nilable(T::Array[Interface::TextEdit])) }
     def formatting(uri)
-      Requests::Formatting.new(@store.get(uri), formatter: @store.detected_formatter).run
+      Requests::Formatting.new(@store.get(uri), formatter: @store.formatter).run
     end
 
     sig do
@@ -490,6 +491,24 @@ module RubyLsp
           code_lens_provider: code_lens_provider,
         ),
       )
+    end
+
+    sig { params(gem_pattern: Regexp).returns(T::Boolean) }
+    def direct_dependency?(gem_pattern)
+      Bundler.locked_gems.dependencies.keys.grep(gem_pattern).any?
+    end
+
+    sig { returns(String) }
+    def detected_formatter
+      return @store.formatter unless @store.formatter == "auto"
+
+      if direct_dependency?(/^rubocop-?$/)
+        "rubocop"
+      elsif direct_dependency?(/^syntax_tree$/)
+        "syntax_tree"
+      else
+        "none"
+      end
     end
   end
 end

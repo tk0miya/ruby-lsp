@@ -90,7 +90,7 @@ class FormattingTest < Minitest::Test
         end
       end
     RUBY
-    assert_nil(RubyLsp::Requests::Formatting.new(document).run)
+    assert_nil(RubyLsp::Requests::Formatting.new(document, formatter: "rubocop").run)
   end
 
   def test_returns_nil_if_document_is_not_in_project_folder
@@ -143,12 +143,5 @@ class FormattingTest < Minitest::Test
     return unless defined?(RubyLsp::Requests::Support::SyntaxTreeFormattingRunner)
 
     T.unsafe(Singleton).__init__(RubyLsp::Requests::Support::SyntaxTreeFormattingRunner)
-  end
-
-  def stub_dependencies(rubocop:, syntax_tree:)
-    dependencies = {}
-    dependencies["syntax_tree"] = "..." if syntax_tree
-    dependencies["rubocop"] = "..." if rubocop
-    Bundler.locked_gems.stubs(:dependencies).returns(dependencies)
   end
 end
