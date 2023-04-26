@@ -145,20 +145,16 @@ class ExecutorTest < Minitest::Test
   def test_detects_rubocop_if_direct_dependency
     stub_dependencies(rubocop: true, syntax_tree: false)
     store = RubyLsp::Store.new
-    RubyLsp::Executor.new(store, @message_queue).send(
-      :initialize_request,
-      { initializationOptions: { formatter: "auto" } },
-    )
+    RubyLsp::Executor.new(store, @message_queue)
+      .execute(method: "initialize", params: { initializationOptions: { formatter: "auto" } })
     assert_equal("rubocop", store.formatter)
   end
 
   def test_detects_syntax_tree_if_direct_dependency
     stub_dependencies(rubocop: false, syntax_tree: true)
     store = RubyLsp::Store.new
-    RubyLsp::Executor.new(store, @message_queue).send(
-      :initialize_request,
-      { initializationOptions: { formatter: "auto" } },
-    )
+    RubyLsp::Executor.new(store, @message_queue)
+      .execute(method: "initialize", params: { initializationOptions: { formatter: "auto" } })
     assert_equal("syntax_tree", store.formatter)
   end
 
