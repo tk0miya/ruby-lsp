@@ -260,6 +260,9 @@ module RubyLsp
 
     sig { params(uri: String).returns(T.nilable(T::Array[Interface::TextEdit])) }
     def formatting(uri)
+      # If formatter is set to `auto` but no supported formatting gem is found, don't attempt to format
+      return [] if @store.formatter == "none"
+
       Requests::Formatting.new(@store.get(uri), formatter: @store.formatter).run
     end
 
