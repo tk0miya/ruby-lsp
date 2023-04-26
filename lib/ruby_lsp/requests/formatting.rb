@@ -28,7 +28,6 @@ module RubyLsp
     class Formatting < BaseRequest
       class Error < StandardError; end
       class InvalidFormatter < StandardError; end
-      class NoFormatter < StandardError; end
 
       extend T::Sig
 
