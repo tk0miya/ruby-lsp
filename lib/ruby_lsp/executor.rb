@@ -12,7 +12,6 @@ module RubyLsp
       # store
       @store = store
       @message_queue = message_queue
-      @store.formatter = detected_formatter
     end
 
     sig { params(request: T::Hash[Symbol, T.untyped]).returns(Result) }
@@ -383,7 +382,11 @@ module RubyLsp
       end
 
       formatter = options.dig(:initializationOptions, :formatter)
-      @store.formatter = formatter unless formatter.nil?
+      @store.formatter = if formatter == "auto"
+        detected_formatter
+      else
+        formatter
+      end
 
       configured_features = options.dig(:initializationOptions, :enabledFeatures)
       experimental_features = options.dig(:initializationOptions, :experimentalFeaturesEnabled)
@@ -495,8 +498,6 @@ module RubyLsp
 
     sig { returns(String) }
     def detected_formatter
-      return @store.formatter unless @store.formatter == "auto"
-
       if direct_dependency?(/^rubocop-?$/)
         "rubocop"
       elsif direct_dependency?(/^syntax_tree$/)
