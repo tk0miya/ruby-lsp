@@ -493,11 +493,6 @@ module RubyLsp
       )
     end
 
-    sig { params(gem_pattern: Regexp).returns(T::Boolean) }
-    def direct_dependency?(gem_pattern)
-      Bundler.locked_gems.dependencies.keys.grep(gem_pattern).any?
-    end
-
     sig { returns(String) }
     def detected_formatter
       return @store.formatter unless @store.formatter == "auto"
@@ -509,6 +504,11 @@ module RubyLsp
       else
         "none"
       end
+    end
+
+    sig { params(gem_pattern: Regexp).returns(T::Boolean) }
+    def direct_dependency?(gem_pattern)
+      Bundler.locked_gems.dependencies.keys.grep(gem_pattern).any?
     end
   end
 end
