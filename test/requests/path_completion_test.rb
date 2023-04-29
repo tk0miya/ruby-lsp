@@ -7,6 +7,7 @@ class PathCompletionTest < Minitest::Test
   def setup
     @message_queue = Thread::Queue.new
     @uri = "file:///fake.rb"
+    @store = RubyLsp::Store.new
   end
 
   def test_completion_command
@@ -26,9 +27,9 @@ class PathCompletionTest < Minitest::Test
     }
 
     result = with_file_structure do
-      store = RubyLsp::Store.new
-      store.set(uri: @uri, source: document.source, version: 1)
-      RubyLsp::Executor.new(store, @message_queue).execute({
+      @store = RubyLsp::Store.new
+      @store.set(uri: @uri, source: document.source, version: 1)
+      RubyLsp::Executor.new(@store, @message_queue).execute({
         method: "textDocument/completion",
         params: { textDocument: { uri: @uri }, position: end_position },
       }).response
@@ -65,9 +66,8 @@ class PathCompletionTest < Minitest::Test
     }
 
     result = with_file_structure do
-      store = RubyLsp::Store.new
-      store.set(uri: @uri, source: document.source, version: 1)
-      RubyLsp::Executor.new(store, @message_queue).execute({
+      @store.set(uri: @uri, source: document.source, version: 1)
+      RubyLsp::Executor.new(@store, @message_queue).execute({
         method: "textDocument/completion",
         params: { textDocument: { uri: @uri }, position: end_position },
       }).response
@@ -104,9 +104,8 @@ class PathCompletionTest < Minitest::Test
     }
 
     result = with_file_structure do
-      store = RubyLsp::Store.new
-      store.set(uri: @uri, source: document.source, version: 1)
-      RubyLsp::Executor.new(store, @message_queue).execute({
+      @store.set(uri: @uri, source: document.source, version: 1)
+      RubyLsp::Executor.new(@store, @message_queue).execute({
         method: "textDocument/completion",
         params: { textDocument: { uri: @uri }, position: end_position },
       }).response
@@ -143,9 +142,8 @@ class PathCompletionTest < Minitest::Test
     }
 
     result = with_file_structure do
-      store = RubyLsp::Store.new
-      store.set(uri: @uri, source: document.source, version: 1)
-      RubyLsp::Executor.new(store, @message_queue).execute({
+      @store.set(uri: @uri, source: document.source, version: 1)
+      RubyLsp::Executor.new(@store, @message_queue).execute({
         method: "textDocument/completion",
         params: { textDocument: { uri: @uri }, position: end_position },
       }).response
@@ -174,9 +172,8 @@ class PathCompletionTest < Minitest::Test
       character: document.source.rindex('"'),
     }
 
-    store = RubyLsp::Store.new
-    store.set(uri: @uri, source: document.source, version: 1)
-    RubyLsp::Executor.new(store, @message_queue).execute({
+    @store.set(uri: @uri, source: document.source, version: 1)
+    RubyLsp::Executor.new(@store, @message_queue).execute({
       method: "textDocument/completion",
       params: { textDocument: { uri: @uri }, position: end_position },
     }).response
@@ -194,9 +191,8 @@ class PathCompletionTest < Minitest::Test
       character: document.source.rindex('"'),
     }
 
-    store = RubyLsp::Store.new
-    store.set(uri: @uri, source: document.source, version: 1)
-    response = RubyLsp::Executor.new(store, @message_queue).execute({
+    @store.set(uri: @uri, source: document.source, version: 1)
+    response = RubyLsp::Executor.new(@store, @message_queue).execute({
       method: "textDocument/completion",
       params: { textDocument: { uri: @uri }, position: end_position },
     }).response
