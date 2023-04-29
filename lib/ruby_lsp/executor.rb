@@ -391,17 +391,7 @@ module RubyLsp
         return unless argument.is_a?(SyntaxTree::StringLiteral)
 
         args
-      when SyntaxTree::CallNode # e.g. `require("foo")`
-        message = matched.message
-        return if message.is_a?(Symbol)
-        return unless message.value == "require"
-
-        args = matched.arguments
-        args = args.arguments if args.is_a?(SyntaxTree::ArgParen)
-        return if args.nil? || args.is_a?(SyntaxTree::ArgsForward)
-
-        args
-      when SyntaxTree::CommandCall # e.g. `Kernel.require("foo")`
+      when SyntaxTree::CallNode, SyntaxTree::CommandCall # e.g. `require("foo")`, `Kernel.require("foo")`
         message = matched.message
         return if message.is_a?(Symbol)
         return unless message.value == "require"
