@@ -380,20 +380,17 @@ module RubyLsp
 
       return unless matched && parent
 
-      target = case matched
+      args = case matched
       when SyntaxTree::Command # e.g. `require "foo"`
-        return unless matched.message.value == "require"
+        message = matched.message
+        return unless message.value == "require"
 
         args = matched.arguments
 
         argument = args.parts.first
         return unless argument.is_a?(SyntaxTree::StringLiteral)
 
-        path_node = argument.parts.first
-        return unless path_node.is_a?(SyntaxTree::TStringContent)
-        return unless (path_node.location.start_char..path_node.location.end_char).cover?(char_position)
-
-        path_node
+        args
       when SyntaxTree::CallNode # e.g. `require("foo")`
         message = matched.message
         return if message.is_a?(Symbol)
@@ -403,14 +400,7 @@ module RubyLsp
         args = args.arguments if args.is_a?(SyntaxTree::ArgParen)
         return if args.nil? || args.is_a?(SyntaxTree::ArgsForward)
 
-        argument = args.parts.first
-        return unless argument.is_a?(SyntaxTree::StringLiteral)
-
-        path_node = argument.parts.first
-        return unless path_node.is_a?(SyntaxTree::TStringContent)
-        return unless (path_node.location.start_char..path_node.location.end_char).cover?(char_position)
-
-        path_node
+        args
       when SyntaxTree::CommandCall # e.g. `Kernel.require("foo")`
         message = matched.message
         return if message.is_a?(Symbol)
@@ -420,20 +410,18 @@ module RubyLsp
         args = args.arguments if args.is_a?(SyntaxTree::ArgParen)
         return if args.nil? || args.is_a?(SyntaxTree::ArgsForward)
 
-        argument = args.parts.first
-        return unless argument.is_a?(SyntaxTree::StringLiteral)
-
-        path_node = argument.parts.first
-        return unless path_node.is_a?(SyntaxTree::TStringContent)
-        return unless (path_node.location.start_char..path_node.location.end_char).cover?(char_position)
-
-        path_node
+        args
       end
 
-      return unless target
+      argument = T.must(args).parts.first
+      return unless argument.is_a?(SyntaxTree::StringLiteral)
+
+      path_node = argument.parts.first
+      return unless path_node.is_a?(SyntaxTree::TStringContent)
+      return unless (path_node.location.start_char..path_node.location.end_char).cover?(char_position)
 
       listener = Requests::PathCompletion.new(uri, @message_queue)
-      EventEmitter.new(listener).emit_for_target(target)
+      EventEmitter.new(listener).emit_for_target(path_node)
       listener.response
     end
 
