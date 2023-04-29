@@ -196,7 +196,6 @@ class PathCompletionTest < Minitest::Test
       method: "textDocument/completion",
       params: { textDocument: { uri: @uri }, position: end_position },
     }).response
-    # TODO: is nil check correct?
     assert_nil(response)
   ensure
     T.must(@message_queue).close
