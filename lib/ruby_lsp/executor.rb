@@ -381,7 +381,37 @@ module RubyLsp
       return unless matched && parent
 
       target = case matched
-      when SyntaxTree::Command, SyntaxTree::CallNode, SyntaxTree::CommandCall
+      when SyntaxTree::Command # e.g. `require "foo"`
+        return unless matched.message.value == "require"
+
+        args = matched.arguments
+
+        argument = args.parts.first
+        return unless argument.is_a?(SyntaxTree::StringLiteral)
+
+        path_node = argument.parts.first
+        return unless path_node.is_a?(SyntaxTree::TStringContent)
+        return unless (path_node.location.start_char..path_node.location.end_char).cover?(char_position)
+
+        path_node
+      when SyntaxTree::CallNode # e.g. `require("foo")`
+        message = matched.message
+        return if message.is_a?(Symbol)
+        return unless message.value == "require"
+
+        args = matched.arguments
+        args = args.arguments if args.is_a?(SyntaxTree::ArgParen)
+        return if args.nil? || args.is_a?(SyntaxTree::ArgsForward)
+
+        argument = args.parts.first
+        return unless argument.is_a?(SyntaxTree::StringLiteral)
+
+        path_node = argument.parts.first
+        return unless path_node.is_a?(SyntaxTree::TStringContent)
+        return unless (path_node.location.start_char..path_node.location.end_char).cover?(char_position)
+
+        path_node
+      when SyntaxTree::CommandCall # e.g. `Kernel.require("foo")`
         message = matched.message
         return if message.is_a?(Symbol)
         return unless message.value == "require"
