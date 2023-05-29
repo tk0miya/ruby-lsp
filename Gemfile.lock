@@ -177,6 +177,7 @@ DEPENDENCIES
   minitest (~> 5.18)
   minitest-reporters (~> 1.6)
   mocha (~> 2.0)
+  nokogiri
   railties (~> 7.0)
   rake (~> 13.0)
   rdoc
