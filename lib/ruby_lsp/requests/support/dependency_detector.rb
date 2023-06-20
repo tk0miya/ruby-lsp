@@ -27,8 +27,7 @@ module RubyLsp
         elsif direct_dependency?(/^rspec/)
           "rspec"
         else
-          warn("WARNING: No test library detected. Assuming minitest.")
-          "minitest"
+          warn("WARNING: No test library detected.")
         end
       end
 

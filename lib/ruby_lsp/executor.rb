@@ -96,7 +96,7 @@ module RubyLsp
         emitter = EventEmitter.new
         document_symbol = Requests::DocumentSymbol.new(emitter, @message_queue)
         document_link = Requests::DocumentLink.new(uri, emitter, @message_queue)
-        code_lens = Requests::CodeLens.new(uri, emitter, @message_queue, @test_library)
+        code_lens = Requests::CodeLens.new(uri, emitter, @message_queue, @test_library) if @test_library
         code_lens_extensions_listeners = Requests::CodeLens.listeners.map do |l|
           T.unsafe(l).new(document.uri, emitter, @message_queue)
         end

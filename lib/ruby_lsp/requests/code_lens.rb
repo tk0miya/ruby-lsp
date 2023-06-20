@@ -223,6 +223,8 @@ module RubyLsp
           if method_name
             command += " --name " + Shellwords.escape(method_name)
           end
+        else
+          T.absurd(@test_library)
         end
 
         command
