@@ -13,7 +13,7 @@ module RubyLsp
       # Requests that mutate the store must be run sequentially! Parallel requests only receive a temporary copy of the
       # store
       @store = store
-      @test_library = T.let(DependencyDetector.detected_test_library, String)
+      @test_library = T.let(DependencyDetector.detected_test_library, T.nilable(String))
       @message_queue = message_queue
     end
 

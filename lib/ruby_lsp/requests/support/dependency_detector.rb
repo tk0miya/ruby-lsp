@@ -18,7 +18,7 @@ module RubyLsp
         end
       end
 
-      sig { returns(String) }
+      sig { returns(T.nilable(String)) }
       def detected_test_library
         if direct_dependency?(/^minitest/)
           "minitest"
@@ -28,6 +28,7 @@ module RubyLsp
           "rspec"
         else
           warn("WARNING: No test library detected.")
+          nil
         end
       end
 
