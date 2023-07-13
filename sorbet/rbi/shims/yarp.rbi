@@ -15,6 +15,17 @@ module YARP
 
     sig { returns(T::Boolean) }
     def success?; end
+
+    sig { returns(T::Array[ParseError]) }
+    def errors; end
+  end
+
+  class ParseError
+    sig { returns(Location) }
+    def location; end
+
+    sig { returns(String) }
+    def message; end
   end
 
   class Location
