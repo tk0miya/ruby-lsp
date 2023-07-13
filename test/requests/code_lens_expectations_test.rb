@@ -123,7 +123,7 @@ class CodeLensExpectationsTest < ExpectationsTestRunner
         @response = [RubyLsp::Interface::CodeLens.new(
           range: range_from_syntax_tree_node(node),
           command: RubyLsp::Interface::Command.new(
-            title: "Run #{node.constant.constant.value}",
+            title: "Run #{node.constant_path.location.slice}",
             command: "rubyLsp.runTest",
           ),
         )]

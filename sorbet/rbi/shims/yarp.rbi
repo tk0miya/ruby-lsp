@@ -17,14 +17,6 @@ module YARP
     def success?; end
   end
 
-  class Node
-    sig { returns(T::Array[T.nilable(YARP::Node)]) }
-    def child_nodes; end
-
-    sig { returns(Location) }
-    def location; end
-  end
-
   class Location
     sig { returns(Integer) }
     def start_offset; end
@@ -48,6 +40,14 @@ module YARP
     def slice; end
   end
 
+  class Node
+    sig { returns(T::Array[T.nilable(YARP::Node)]) }
+    def child_nodes; end
+
+    sig { returns(Location) }
+    def location; end
+  end
+
   class ClassNode
     sig { returns(ConstantPathNode) }
     def constant_path; end
@@ -56,5 +56,28 @@ module YARP
   class ModuleNode
     sig { returns(ConstantPathNode) }
     def constant_path; end
+  end
+
+  class DefNode
+    sig { returns(String) }
+    def name; end
+  end
+
+  class CallNode
+    sig { returns(String) }
+    def name; end
+
+    sig { returns(T.nilable(ArgumentsNode)) }
+    def arguments; end
+  end
+
+  class ArgumentsNode
+    sig { returns(T::Array[YARP::Node]) }
+    def arguments; end
+  end
+
+  class StringNode
+    sig { returns(String) }
+    def content; end
   end
 end

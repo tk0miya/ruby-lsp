@@ -9,7 +9,7 @@ module RubyLsp
         # or extensions by created by developers outside of Shopify, so be cautious of changing anything.
         extend T::Sig
 
-        sig { params(node: SyntaxTree::Node).returns(Interface::Range) }
+        sig { params(node: YARP::Node).returns(Interface::Range) }
         def range_from_syntax_tree_node(node)
           loc = node.location
 
@@ -43,7 +43,7 @@ module RubyLsp
           name
         end
 
-        sig { params(node: T.nilable(SyntaxTree::Node), range: T.nilable(T::Range[Integer])).returns(T::Boolean) }
+        sig { params(node: T.nilable(YARP::Node), range: T.nilable(T::Range[Integer])).returns(T::Boolean) }
         def visible?(node, range)
           return true if range.nil?
           return false if node.nil?
@@ -54,7 +54,7 @@ module RubyLsp
 
         sig do
           params(
-            node: SyntaxTree::Node,
+            node: YARP::Node,
             title: String,
             command_name: String,
             arguments: T.nilable(T::Array[T.untyped]),
