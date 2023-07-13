@@ -77,23 +77,29 @@ module RubyLsp
       @listeners[:after_call]&.each { |l| T.unsafe(l).after_call(node) }
     end
 
-    # sig { override.params(node: SyntaxTree::ConstPathField).void }
-    # def visit_const_path_field(node)
-    #   @listeners[:on_const_path_field]&.each { |l| T.unsafe(l).on_const_path_field(node) }
-    #   super
-    # end
-
-    # sig { override.params(node: SyntaxTree::TopConstField).void }
-    # def visit_top_const_field(node)
-    #   @listeners[:on_top_const_field]&.each { |l| T.unsafe(l).on_top_const_field(node) }
-    #   super
-    # end
+    sig { override.params(node: YARP::ConstantPathWriteNode).void }
+    def visit_constant_path_write_node(node)
+      @listeners[:on_constant_path_write_node]&.each { |l| T.unsafe(l).on_constant_path_write_node(node) }
+      super
+    end
 
     sig { override.params(node: YARP::DefNode).void }
     def visit_def_node(node)
       @listeners[:on_def]&.each { |l| T.unsafe(l).on_def(node) }
       super
       @listeners[:after_def]&.each { |l| T.unsafe(l).after_def(node) }
+    end
+
+    sig { override.params(node: YARP::InstanceVariableWriteNode).void }
+    def visit_instance_variable_write_node(node)
+      @listeners[:on_instance_variable_write_node]&.each { |l| T.unsafe(l).on_instance_variable_write_node(node) }
+      super
+    end
+
+    sig { override.params(node: YARP::ClassVariableWriteNode).void }
+    def visit_class_variable_write_node(node)
+      @listeners[:on_class_variable_write_node]&.each { |l| T.unsafe(l).on_class_variable_write_node(node) }
+      super
     end
 
     # sig { override.params(node: SyntaxTree::VarField).void }

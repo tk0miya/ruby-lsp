@@ -72,6 +72,12 @@ module YARP
   class DefNode
     sig { returns(String) }
     def name; end
+
+    sig { returns(T.nilable(YARP::Node)) }
+    def receiver; end
+
+    sig { returns(Location) }
+    def name_loc; end
   end
 
   class CallNode
@@ -80,6 +86,9 @@ module YARP
 
     sig { returns(T.nilable(ArgumentsNode)) }
     def arguments; end
+
+    sig { returns(T.nilable(YARP::Node)) }
+    def receiver; end
   end
 
   class ArgumentsNode
@@ -90,5 +99,31 @@ module YARP
   class StringNode
     sig { returns(String) }
     def content; end
+  end
+
+  class ConstantPathWriteNode
+    sig { returns(YARP::Node) }
+    def target; end
+  end
+
+  class SymbolNode
+    sig { returns(String) }
+    def value; end
+  end
+
+  class InstanceVariableWriteNode
+    sig { returns(String) }
+    def name; end
+
+    sig { returns(Location) }
+    def name_loc; end
+  end
+
+  class ClassVariableWriteNode
+    sig { returns(String) }
+    def name; end
+
+    sig { returns(Location) }
+    def name_loc; end
   end
 end
