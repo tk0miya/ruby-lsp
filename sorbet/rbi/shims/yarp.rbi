@@ -126,4 +126,9 @@ module YARP
     sig { returns(Location) }
     def name_loc; end
   end
+
+  class RescueNode
+    sig { returns(T::Array[YARP::Node]) }
+    def exceptions; end
+  end
 end
