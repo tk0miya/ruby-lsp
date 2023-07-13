@@ -16019,13 +16019,18 @@ class RuboCop::Cop::Layout::TrailingEmptyLines < ::RuboCop::Cop::Base
 
   # @return [Boolean]
   #
-  # source://rubocop//lib/rubocop/cop/layout/trailing_empty_lines.rb#79
+  # source://rubocop//lib/rubocop/cop/layout/trailing_empty_lines.rb#90
+  def end_with_percent_blank_string?(processed_source); end
+
+  # @return [Boolean]
+  #
+  # source://rubocop//lib/rubocop/cop/layout/trailing_empty_lines.rb#80
   def ends_in_end?(processed_source); end
 
-  # source://rubocop//lib/rubocop/cop/layout/trailing_empty_lines.rb#89
+  # source://rubocop//lib/rubocop/cop/layout/trailing_empty_lines.rb#94
   def message(wanted_blank_lines, blank_lines); end
 
-  # source://rubocop//lib/rubocop/cop/layout/trailing_empty_lines.rb#66
+  # source://rubocop//lib/rubocop/cop/layout/trailing_empty_lines.rb#67
   def offense_detected(buffer, wanted_blank_lines, blank_lines, whitespace_at_end); end
 end
 
@@ -27434,12 +27439,12 @@ class RuboCop::Cop::Naming::HeredocDelimiterNaming < ::RuboCop::Cop::Base
 
   private
 
-  # source://rubocop//lib/rubocop/cop/naming/heredoc_delimiter_naming.rb#49
+  # source://rubocop//lib/rubocop/cop/naming/heredoc_delimiter_naming.rb#51
   def forbidden_delimiters; end
 
   # @return [Boolean]
   #
-  # source://rubocop//lib/rubocop/cop/naming/heredoc_delimiter_naming.rb#39
+  # source://rubocop//lib/rubocop/cop/naming/heredoc_delimiter_naming.rb#41
   def meaningful_delimiters?(node); end
 end
 
@@ -28972,13 +28977,13 @@ module RuboCop::Cop::PrecedingFollowingAlignment
   # source://rubocop//lib/rubocop/cop/mixin/preceding_following_alignment.rb#95
   def aligned_assignment?(range, line); end
 
-  # @return [Boolean]
-  #
-  # source://rubocop//lib/rubocop/cop/mixin/preceding_following_alignment.rb#91
-  def aligned_char?(range, line); end
-
   # source://rubocop//lib/rubocop/cop/mixin/preceding_following_alignment.rb#70
   def aligned_comment_lines; end
+
+  # @return [Boolean]
+  #
+  # source://rubocop//lib/rubocop/cop/mixin/preceding_following_alignment.rb#89
+  def aligned_dot?(range, line); end
 
   # @return [Boolean]
   #
@@ -28987,7 +28992,7 @@ module RuboCop::Cop::PrecedingFollowingAlignment
 
   # @return [Boolean]
   #
-  # source://rubocop//lib/rubocop/cop/mixin/preceding_following_alignment.rb#83
+  # source://rubocop//lib/rubocop/cop/mixin/preceding_following_alignment.rb#81
   def aligned_operator?(range, line); end
 
   # @return [Boolean]
@@ -29041,7 +29046,7 @@ module RuboCop::Cop::PrecedingFollowingAlignment
 
   # @return [Boolean]
   #
-  # source://rubocop//lib/rubocop/cop/mixin/preceding_following_alignment.rb#87
+  # source://rubocop//lib/rubocop/cop/mixin/preceding_following_alignment.rb#85
   def aligned_words?(range, line); end
 
   # @return [Boolean]
@@ -36219,10 +36224,10 @@ class RuboCop::Cop::Style::FrozenStringLiteralComment < ::RuboCop::Cop::Base
 
   private
 
-  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#176
+  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#178
   def disabled_offense(processed_source); end
 
-  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#188
+  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#190
   def enable_comment(corrector); end
 
   # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#120
@@ -36234,34 +36239,34 @@ class RuboCop::Cop::Style::FrozenStringLiteralComment < ::RuboCop::Cop::Base
   # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#114
   def ensure_no_comment(processed_source); end
 
-  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#212
+  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#214
   def following_comment; end
 
-  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#150
+  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#152
   def frozen_string_literal_comment(processed_source); end
 
-  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#194
+  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#196
   def insert_comment(corrector); end
 
   # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#137
   def last_special_comment(processed_source); end
 
-  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#204
+  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#206
   def line_range(line); end
 
-  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#156
+  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#158
   def missing_offense(processed_source); end
 
-  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#162
+  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#164
   def missing_true_offense(processed_source); end
 
-  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#208
+  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#210
   def preceding_comment; end
 
-  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#184
+  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#186
   def remove_comment(corrector, node); end
 
-  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#168
+  # source://rubocop//lib/rubocop/cop/style/frozen_string_literal_comment.rb#170
   def unnecessary_comment_offense(processed_source); end
 end
 
@@ -46463,14 +46468,14 @@ RuboCop::Cop::Style::ReturnNil::RETURN_NIL_MSG = T.let(T.unsafe(nil), String)
 #
 #   do_something?
 #   end
-# @example AllowedMethod: ['foo?']
+# @example AllowedMethods: ['foo?']
 #   # good
 #   def foo?
 #   return if condition
 #
 #   do_something?
 #   end
-# @example AllowedPattern: [/foo/]
+# @example AllowedPatterns: [/foo/]
 #   # good
 #   def foo?
 #   return if condition
@@ -46951,48 +46956,48 @@ class RuboCop::Cop::Style::Semicolon < ::RuboCop::Cop::Base
   # source://rubocop//lib/rubocop/cop/style/semicolon.rb#64
   def check_for_line_terminator_or_opener; end
 
-  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#73
+  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#70
   def each_semicolon; end
 
   # @return [Boolean]
   #
-  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#105
+  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#102
   def exist_semicolon_after_left_curly_brace?(tokens); end
 
   # @return [Boolean]
   #
-  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#113
+  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#110
   def exist_semicolon_after_left_string_interpolation_brace?(tokens); end
 
   # @return [Boolean]
   #
-  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#101
+  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#98
   def exist_semicolon_before_right_curly_brace?(tokens); end
 
   # @return [Boolean]
   #
-  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#109
+  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#106
   def exist_semicolon_before_right_string_interpolation_brace?(tokens); end
 
-  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#137
+  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#134
   def expressions_per_line(exprs); end
 
-  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#151
+  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#148
   def find_range_node(token_before_semicolon); end
 
-  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#143
+  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#140
   def find_semicolon_positions(line); end
 
-  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#157
+  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#154
   def range_nodes; end
 
-  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#117
+  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#114
   def register_semicolon(line, column, after_expression, token_before_semicolon = T.unsafe(nil)); end
 
-  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#86
+  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#83
   def semicolon_position(tokens); end
 
-  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#82
+  # source://rubocop//lib/rubocop/cop/style/semicolon.rb#79
   def tokens_for_lines; end
 
   class << self

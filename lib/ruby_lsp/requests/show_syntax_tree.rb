@@ -22,8 +22,6 @@ module RubyLsp
 
       sig { override.returns(String) }
       def run
-        return "Document contains syntax error" if @document.syntax_error?
-
         output_string = +""
         PP.pp(@document.tree, output_string)
         output_string
