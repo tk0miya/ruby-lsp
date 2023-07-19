@@ -27,7 +27,7 @@ class PathCompletionTest < Minitest::Test
     }
     end_position = {
       line: 0,
-      character: document.source.rindex('"'),
+      character: T.must(document.source.rindex('"')),
     }
 
     result = with_file_structure do

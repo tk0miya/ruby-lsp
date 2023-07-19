@@ -41,8 +41,8 @@ module RubyLsp
         @listeners[:on_call]&.each { |l| T.unsafe(l).on_call(node) }
       when YARP::ConstantPathNode
         @listeners[:on_constant_path_node]&.each { |l| T.unsafe(l).on_constant_path_node(node) }
-      # when SyntaxTree::TStringContent
-      #   @listeners[:on_tstring_content]&.each { |l| T.unsafe(l).on_tstring_content(node) }
+      when YARP::StringNode
+        @listeners[:on_string_node]&.each { |l| T.unsafe(l).on_string_node(node) }
       # when SyntaxTree::ConstPathRef
       #   @listeners[:on_const_path_ref]&.each { |l| T.unsafe(l).on_const_path_ref(node) }
       # when SyntaxTree::Const
