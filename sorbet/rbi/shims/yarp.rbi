@@ -84,6 +84,12 @@ module YARP
     sig { returns(String) }
     def name; end
 
+    sig { returns(String) }
+    def message; end
+
+    sig { returns(Location) }
+    def message_loc; end
+
     sig { returns(T.nilable(ArgumentsNode)) }
     def arguments; end
 

@@ -39,6 +39,8 @@ module RubyLsp
       case node
       when YARP::CallNode
         @listeners[:on_call]&.each { |l| T.unsafe(l).on_call(node) }
+      when YARP::ConstantPathNode
+        @listeners[:on_constant_path_node]&.each { |l| T.unsafe(l).on_constant_path_node(node) }
       # when SyntaxTree::TStringContent
       #   @listeners[:on_tstring_content]&.each { |l| T.unsafe(l).on_tstring_content(node) }
       # when SyntaxTree::ConstPathRef
@@ -75,6 +77,12 @@ module RubyLsp
       @listeners[:on_call]&.each { |l| T.unsafe(l).on_call(node) }
       super
       @listeners[:after_call]&.each { |l| T.unsafe(l).after_call(node) }
+    end
+
+    sig { override.params(node: YARP::ConstantPathNode).void }
+    def visit_constant_path_node(node)
+      @listeners[:on_constant_path_node]&.each { |l| T.unsafe(l).on_constant_path_node(node) }
+      super
     end
 
     sig { override.params(node: YARP::ConstantPathWriteNode).void }

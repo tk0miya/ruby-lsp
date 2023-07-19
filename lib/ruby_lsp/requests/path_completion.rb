@@ -54,7 +54,7 @@ module RubyLsp
         Interface::CompletionItem.new(
           label: label,
           text_edit: Interface::TextEdit.new(
-            range: range_from_syntax_tree_node(node),
+            range: range_from_node(node),
             new_text: label,
           ),
           kind: Constant::CompletionItemKind::REFERENCE,

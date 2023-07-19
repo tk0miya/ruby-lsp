@@ -177,8 +177,6 @@ module RubyLsp
     sig { params(uri: String, position: Document::PositionShape).returns(T.nilable(Interface::Location)) }
     def definition(uri, position)
       document = @store.get(uri)
-      return if document.syntax_error?
-
       target, _parent = document.locate_node(position, node_types: [YARP::CallNode])
 
       emitter = EventEmitter.new
@@ -202,8 +200,6 @@ module RubyLsp
     end
     def hover(uri, position)
       document = @store.get(uri)
-      return if document.syntax_error?
-
       target, parent = document.locate_node(position)
 
       if !Requests::Hover::ALLOWED_TARGETS.include?(target.class) &&
@@ -292,8 +288,6 @@ module RubyLsp
     end
     def document_highlight(uri, position)
       document = @store.get(uri)
-      return if document.syntax_error?
-
       target, parent = document.locate_node(position)
       emitter = EventEmitter.new
       listener = Requests::DocumentHighlight.new(target, parent, emitter, @message_queue)
@@ -378,7 +372,7 @@ module RubyLsp
         @message_queue,
         range: start_line..end_line,
       )
-      emitter.visit(document.tree) if document.parsed?
+      emitter.visit(document.tree)
 
       Requests::Support::SemanticTokenEncoder.new.encode(listener.response)
     end
@@ -388,11 +382,10 @@ module RubyLsp
     end
     def completion(uri, position)
       document = @store.get(uri)
-      return unless document.parsed?
 
       char_position = document.create_scanner.find_char_position(position)
       matched, parent = document.locate(
-        T.must(document.tree),
+        document.tree,
         char_position,
         node_types: [SyntaxTree::Command, SyntaxTree::CommandCall, SyntaxTree::CallNode],
       )
