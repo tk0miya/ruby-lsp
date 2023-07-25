@@ -39,5 +39,10 @@ module RubyLsp
 
       assert_equal("rails", DependencyDetector.detected_test_library)
     end
+
+    def test_direct_dependency_returns_false_outside_of_bundle
+      File.expects(:exist?).with("#{Dir.pwd}/Gemfile").once.returns(false)
+      refute(DependencyDetector.direct_dependency?(/^ruby-lsp/))
+    end
   end
 end
